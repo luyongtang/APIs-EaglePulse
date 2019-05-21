@@ -1,22 +1,27 @@
 const mysql = require("mysql");
-const connection = mysql.createConnection({
+
+const mysqlConnection = mysql.createPool({
   host: "sitham.ca",
   user: "sithamca_yl",
   password: "yongtangLu",
   database: "sithamca_pulse"
 });
 
-function connect() {
-  connection.connect(err => {
-    if (err) throw err;
-    console.log("Connected!");
-  });
+class DbConnector {
+  constructor() {
+    this.name = "DbConnector";
+    this.runQuery = function(sql, callback) {
+      const db = mysqlConnection;
+      db.query(sql, (error, results, fields) => {
+        if (error) {
+          throw error;
+        }
+        callback(results);
+      });
+    };
+  }
 }
 
-function close() {
-  connection.end();
-  console.log("connection is closed!");
-}
+const connector = new DbConnector();
 
-module.exports.connect = connect;
-module.exports.close = close;
+module.exports = connector;
