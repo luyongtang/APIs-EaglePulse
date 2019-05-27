@@ -1,16 +1,16 @@
 const routes = require("express").Router();
-let db = require("../DbConnection/dbconfig");
+const db = require("../DbConnection/dbconfig");
+const dbconnect = require("../DbConnection/db");
+const NewsMapper = require("../mappers/newsMapper");
+
+const pool = dbconnect.getPool();
+const newsMapper = new NewsMapper();
 
 routes.get("/news", (req, res) => {
   console.log(db.name);
-  if (!req.body.city)
-    res.status(400).json({ err: "the field of city is required" });
-  else {
-    const sql = "SELECT * FROM storyLocation_montreal_yt";
-    db.runQuery(sql, results => {
-      res.status(200).json({ data: results });
-    });
-  }
+  const newsResult = newsMapper.fetchNews(req.body, result => {
+    res.status(result.status * 1).json(result);
+  });
 });
 
 module.exports = routes;

@@ -1,11 +1,6 @@
 const mysql = require("mysql");
-
-const mysqlConnection = mysql.createPool({
-  host: "sitham.ca",
-  user: "sithamca_yl",
-  password: "yongtangLu",
-  database: "sithamca_pulse"
-});
+const settings = require("./config.json");
+const mysqlConnection = mysql.createPool(settings);
 
 class DbConnector {
   constructor() {
