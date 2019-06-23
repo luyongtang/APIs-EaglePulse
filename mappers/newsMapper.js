@@ -25,12 +25,18 @@ class NewsMapper {
     } else {
       const areaName = formatted.areaName;
       const table = "storyLocation_" + areaName + "_yt";
+      if (formatted.sources !== undefined) {
+        console.log("sources:");
+        console.log(formatted.sources.length);
+      }
       // const sql = "SELECT * FROM " + table;
       // const sql = "SELECT * FROM ??";
       let sql =
         "select l.title, l.location, s.sourceName , p.lastUpdated, l.latitude, l.longitude, l.url from storyPlain_montreal_yt p " +
         "inner join storyLocation_montreal_yt l on l.idArticle = p.id " +
-        "inner join sources s on s.id = p.source";
+        "inner join sources s on s.id = p.source " +
+        "WHERE s.sourceName = 'CBC News'";
+      // let sql = "SELECT * FROM sources WHERE sourceName = 'CBC News'";
       const tmp = pool.query(sql, (error, results, fields) => {
         if (error) {
           console.log("error", error.message);
@@ -60,7 +66,7 @@ class NewsMapper {
     result.allSources = data.allSources === undefined ? true : data.allSources;
     result.maxNewsQuantity =
       data.maxNewsQuantity === undefined ? 15 : data.maxNewsQuantity;
-    if (result.latestNews === false || data.newsPeriod !== undefined) {
+    if (result.latestNews === false && data.newsPeriod !== undefined) {
       result.newsStartTime = data.newsPeriod.startTime;
       result.newsEndTime = data.newsPeriod.endTime;
     }
@@ -68,6 +74,24 @@ class NewsMapper {
       result.sources = data.sources;
     }
     return result;
+  }
+
+  queryBuilder(data) {
+    // Decide which table shoule be read to get the info according to the area name
+    const areaName = data.areaName;
+    const locationTable = "storyLocation_" + areaName + "_yt";
+    const plainTable = "storyPlain_" + areaName + "_yt";
+
+    // News sources selections (ongoing)
+    if (data.sources !== undefined) {
+      console.log(data.source.lengh);
+    }
+
+    // Build the query
+    let sql =
+      "select l.title, l.location, s.sourceName , p.lastUpdated, l.latitude, l.longitude, l.url from storyPlain_montreal_yt p " +
+      "inner join storyLocation_montreal_yt l on l.idArticle = p.id " +
+      "inner join sources s on s.id = p.source";
   }
 }
 
