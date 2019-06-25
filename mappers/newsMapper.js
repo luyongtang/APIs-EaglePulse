@@ -25,19 +25,8 @@ class NewsMapper {
     } else {
       const areaName = formatted.areaName;
       const table = "storyLocation_" + areaName + "_yt";
-      if (formatted.sources !== undefined) {
-        console.log("sources:");
-        console.log(formatted.sources.length);
-      }
-      // const sql = "SELECT * FROM " + table;
-      // const sql = "SELECT * FROM ??";
-      let sql =
-        "select l.title, l.location, s.sourceName , p.lastUpdated, l.latitude, l.longitude, l.url from storyPlain_montreal_yt p " +
-        "inner join storyLocation_montreal_yt l on l.idArticle = p.id " +
-        "inner join sources s on s.id = p.source " +
-        "WHERE s.sourceName = 'CBC News'";
-      // let sql = "SELECT * FROM sources WHERE sourceName = 'CBC News'";
-      const tmp = pool.query(sql, (error, results, fields) => {
+      const query = this.queryBuilder(formatted); // build the query
+      const tmp = pool.query(query, (error, results, fields) => {
         if (error) {
           console.log("error", error.message);
           result.status = 404;
@@ -56,6 +45,7 @@ class NewsMapper {
     }
   }
 
+  // To format the raw json data from the frontend to help build the query
   dataFormatter(data) {
     let result = {};
     result.areaName =
@@ -81,17 +71,71 @@ class NewsMapper {
     const areaName = data.areaName;
     const locationTable = "storyLocation_" + areaName + "_yt";
     const plainTable = "storyPlain_" + areaName + "_yt";
+    // Build the raw query
+    let sql =
+      "SELECT l.title, l.location, s.sourceName , p.lastUpdated, l.latitude, l.longitude, l.url FROM " +
+      plainTable +
+      " p " +
+      "INNER JOIN " +
+      locationTable +
+      " l ON l.idArticle = p.id " +
+      "INNER JOIN sources s ON s.id = p.source";
+    console.log("raw query: ", sql);
 
-    // News sources selections (ongoing)
+    // generate the WHERE condition
+    let whereCondition = " WHERE";
+    let sources = "";
+    let period = "";
+
+    // News sources selections
     if (data.sources !== undefined) {
-      console.log(data.source.lengh);
+      console.log("source: ", data.sources.length);
+      for (let i = 0; i < data.sources.length; i++) {
+        let source = " '" + data.sources[i] + "'";
+        sources = sources + " OR s.sourceName =" + source;
+      }
+      sources = sources.substring(4);
+      sources = " (" + sources + ")";
+      console.log(sources);
+      whereCondition += sources;
     }
 
-    // Build the query
-    let sql =
-      "select l.title, l.location, s.sourceName , p.lastUpdated, l.latitude, l.longitude, l.url from storyPlain_montreal_yt p " +
-      "inner join storyLocation_montreal_yt l on l.idArticle = p.id " +
-      "inner join sources s on s.id = p.source";
+    // News period selections
+    if (
+      data.latestNews === false &&
+      data.newsStartTime !== undefined &&
+      data.newsEndTime !== undefined
+    ) {
+      if (sources != "") period += " AND";
+      period +=
+        " DATE_FORMAT(p.lastUpdated, '%Y-%m-%d %H:%i:%s') >= '" +
+        data.newsStartTime +
+        "' AND DATE_FORMAT(p.lastUpdated, '%Y-%m-%d %H:%i:%s') <= '" +
+        data.newsEndTime +
+        "'";
+      console.log("period: " + period);
+      whereCondition += period;
+    }
+    console.log("whereCondition: ", whereCondition);
+
+    // if no sources or period selection, skip the "WHERE" keyword
+    if (sources != "" || period != "") {
+      sql += whereCondition;
+      console.log("sql: ", sql);
+    }
+
+    // Result order
+    const order = " ORDER BY p.lastUpdated DESC";
+
+    // limit of rows in the result
+    const limit = " LIMIT " + data.maxNewsQuantity;
+    console.log("Limit:", limit);
+
+    // Final query
+    sql = sql + order + limit;
+    console.log("Final query: ", sql);
+
+    return sql;
   }
 }
 
