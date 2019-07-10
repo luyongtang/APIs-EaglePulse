@@ -1,5 +1,5 @@
 ## APIs-Eagle Pulse
-The Eagle Pulse Database API is a project developed to better serve the [Eagle Pulse website](http://eaglepulse.com) by having more precision on which data to select from the backend. Now, the extended parameters from this new API-calls includes location, news source type, maximum quantity of news and period of time.
+The Eagle Pulse Database API is a project developed to better serve the [Eagle Pulse website](http://eaglepulse.com) by having more precision on which data to select from the backend. Now, the extended parameters from this new API-calls include location, news source type, maximum quantity of news and period of time.
 
 The API solution is built using Node.JS with Espress JS library. The JSON format is used to input and output data from the API.
 
@@ -7,7 +7,7 @@ The API solution is built using Node.JS with Espress JS library. The JSON format
 Retrieve all the latest news for Montreal city
 
 ##### Input to `/news` using `GET`
-In this example, we only request 1 news quanity to not have a very long JSON output
+In this example, we only request 1 news quantity to not have a very long JSON output
 ```JSON
 {
 	"areaName": "Montreal",
